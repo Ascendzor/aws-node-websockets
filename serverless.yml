@@ -1,0 +1,29 @@
+service: chill
+provider:
+  name: aws
+  runtime: nodejs8.10
+  memorySize: 128
+stage: dev
+region: us-east-1
+
+iamRoleStatements:
+  - Effect: "Allow"
+    Action: "*"
+    Resource: "*"
+
+functions:
+  connect:
+    handler: handler.connect
+    events:
+      - websocket:
+          route: $connect
+  disconnect:
+    handler: handler.disconnect
+    events:
+      - websocket:
+          route: $disconnect
+  default:
+    handler: handler.default
+    events:
+      - websocket:
+          route: $default
