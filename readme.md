@@ -14,3 +14,6 @@ Important files are:
     This is where we make messages back to the clients. The way AWS does it is the websocket connection is actually maintained in APIGateway, not in Lambda. So in order to send a message to our clients we need to send a message to APIGateway and we do that using aws-sdk `apigatewaymanagementapi.postToConnection`.
 
 This is not a full extensive list of all serverless websocket features on AWS, just a small example.
+
+Gotchas!
+Do not use the default aws-sdk that is provided in Lambda. You don't know what version it is, and I struggled many times not understanding why `apigatewaymanagementapi.postToConnection` would not work how I expected and it's because the aws-sdk library on Lambda is very old. You must have your own aws-sdk installed inside node_modules before you do a serverless deploy, and if you do have your own installed then Lambda will use yours and not the default.
