@@ -16,4 +16,6 @@ Important files are:
 This is not a full extensive list of all serverless websocket features on AWS, just a small example.
 
 Gotchas!
-Do not use the default aws-sdk that is provided in Lambda. You don't know what version it is, and I struggled many times not understanding why `apigatewaymanagementapi.postToConnection` would not work how I expected and it's because the aws-sdk library on Lambda is very old. You must have your own aws-sdk installed inside node_modules before you do a serverless deploy, and if you do have your own installed then Lambda will use yours and not the default.
+1) Do not use the default aws-sdk that is provided in Lambda. You don't know what version it is, and I struggled many times not understanding why `apigatewaymanagementapi.postToConnection` would not work how I expected and it's because the aws-sdk library on Lambda is very old. You must have your own aws-sdk installed inside node_modules before you do a serverless deploy, and if you do have your own installed then Lambda will use yours and not the default.
+
+2) The websocket connection is created *after* the connect handler has returned statusCode 200. You cannot send a message inside the connect handler. Only use postToConnection inside the default handler.
