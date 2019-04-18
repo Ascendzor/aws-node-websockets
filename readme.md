@@ -8,7 +8,7 @@ Important files are:
     standard stuff if you are familiar with serverless. In this project I kept the AWS stuff out of this file. The network-related stuff like sending message to client is handled inside communication.js, and the database queries are handled inside data.js
 
 - `data.js`
-    Decoupled database from handler logic. You need a database to use websockets. Because serverless is expected to be spun up on each request we do have session logic, and so how we keep track of our clients we store their connectionId in a database. As opposed to keeping the id in memory on a server. This has disadvantages and advantages, more scalable but could be slower.
+    Decoupled database from handler logic. You need a database to use websockets. Because serverless is expected to be spun up on each request we do not keep session state in memory, so how we keep track of our clients we store their connectionId in a database. This has disadvantages and advantages, more scalable but could be slower.
 
 - `communication.js`
     This is where we make messages back to the clients. The way AWS does it is the websocket connection is actually maintained in APIGateway, not in Lambda. So in order to send a message to our clients we need to send a message to APIGateway and we do that using aws-sdk `apigatewaymanagementapi.postToConnection`.
