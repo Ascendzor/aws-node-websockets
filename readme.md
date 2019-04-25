@@ -9,7 +9,7 @@ Hola, this project is a simple minimal implemention of serverless websockets in 
 3) `npm i`
 4) `cp .env.yml.example .env.yml`
 5) `sls deploy`
-6) Wait 10 minutes... The first deploy takes a long time because it creates a new RDS instance. [Why RDS? Read 1) of serverless.yml section](https://github.com/Ascendzor/aws-node-websockets#serverlessyml)
+6) Wait 10 minutes... The first deploy takes a long time because it creates a new RDS instance. [Why RDS? Read 1. of serverless.yml section](https://github.com/Ascendzor/aws-node-websockets#serverlessyml)
 7) Deployment finishes, wss endpoint is printed in your terminal.
 
 Explanation of important files below.
