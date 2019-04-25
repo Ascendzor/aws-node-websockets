@@ -7,9 +7,10 @@ Hola, this project is a simple minimal implemention of serverless websockets in 
 1) `git clone git@github.com:Ascendzor/aws-node-websockets.git`
 2) `cd aws-node-websockets`
 3) `npm i`
-4) `sls deploy`
-5) Wait 10 minutes... The first deploy takes a long time because it creates a new RDS instance.
-6) Deployment finishes, wss endpoint is printed in your terminal.
+4) `cp .env.yml.example .env.yml`
+5) `sls deploy`
+6) Wait 10 minutes... The first deploy takes a long time because it creates a new RDS instance.
+7) Deployment finishes, wss endpoint is printed in your terminal.
 
 Explanation of important files below.
 
