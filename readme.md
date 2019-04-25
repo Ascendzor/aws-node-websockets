@@ -11,7 +11,7 @@ Hola, this project is a simple minimal implemention of serverless websockets in 
 5) Wait 10 minutes... The first deploy takes a long time because it creates a new RDS instance.
 6) Deployment finishes, wss endpoint is printed in your terminal.
 
-Important files are:
+Explanation of important files below.
 
 # serverless.yml
 Contains the configuration for the serverless framework that this project is based on. Has 2 major parts:
