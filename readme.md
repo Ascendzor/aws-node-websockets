@@ -1,4 +1,6 @@
-Hola, this project is a simple minimal implemention of serverless websockets on AWS.
+# node-aws-websockets-example
+
+Hola, this project is a simple minimal implemention of serverless websockets in node on AWS .
 
 Important files are:
 - `serverless.yml`

@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "nodeawswebsocketsexample",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",
@@ -13,6 +13,6 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.427.0",
-    "mysql": "^2.16.0"
+    "serverless-mysql": "1.3.0"
   }
 }
