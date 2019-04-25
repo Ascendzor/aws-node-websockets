@@ -1,4 +1,4 @@
-service: chill
+service: aws-node-websockets
 provider:
   name: aws
   runtime: nodejs8.10
@@ -39,7 +39,7 @@ resources:
       Type: AWS::RDS::DBInstance
       Properties:
         DBInstanceClass: db.t2.micro
-        DBInstanceIdentifier: ${file(env.yml):databaseInstance)}
+        DBInstanceIdentifier: ${file(env.yml):databaseInstance}
         Engine: MySQL
         AllocatedStorage: 5
         DBName: ${file(env.yml):databaseName}

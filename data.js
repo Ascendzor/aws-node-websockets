@@ -1,5 +1,4 @@
 const util = require('util')
-const secrets = require('./secrets')
 
 const connection = require('serverless-mysql')({
   config: {

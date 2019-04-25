@@ -1,7 +1,7 @@
 const {reply} = require('./communication')
 const {addConnection, listConnections, removeConnection} = require('./data')
 
-module.exports.connect = async (event, context) => {
+module.exports.connect = (event, context) => {
   console.log({event, context})
   const connectionId = event.requestContext.connectionId
   return addConnection({connectionId})
@@ -13,7 +13,7 @@ module.exports.connect = async (event, context) => {
     .catch(console.log)
 }
 
-module.exports.default = async (event, context) => {
+module.exports.default = (event, context) => {
   console.log({event, context})
   const connectionId = event.requestContext.connectionId
   return listConnections()
@@ -26,7 +26,7 @@ module.exports.default = async (event, context) => {
     .catch(console.log)
 }
 
-module.exports.disconnect = async (event, context) => {
+module.exports.disconnect = (event, context) => {
   console.log({event, context})
   const connectionId = event.requestContext.connectionId
   return removeConnection({connectionId})
