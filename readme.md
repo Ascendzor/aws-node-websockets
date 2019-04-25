@@ -1,4 +1,4 @@
-# node-aws-websockets-example
+# aws-node-websockets
 
 Hola, this project is a simple minimal implemention of serverless websockets in node on AWS .
 
