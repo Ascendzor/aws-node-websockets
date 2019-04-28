@@ -1,33 +1,51 @@
-# aws-node-websockets
+# aws-node-websockets usecase
 
-Hola, this project is a simple minimal implemention of serverless websockets in node on AWS.
+Bootstrap a serverless microservice that interfaces by websockets in 10 minutes.
+Reference for people setting things up themselves.
 
-# Works out of the box 🦄
+# cost
+
+All of the services used are in the [Always Free](https://aws.amazon.com/free/?awsf.Free%20Tier%20Types=categories%23alwaysfree) pricing tier for AWS. Except for ApiGateway [click here for pricing](https://aws.amazon.com/api-gateway/pricing/).
+
+This service uses these AWS services and their pricing.
+- Lambda - Always Free tier. [Click here for pricing](https://aws.amazon.com/lambda/pricing/)
+- CloudWatch - Always Free tier. [Click here for pricing](https://aws.amazon.com/cloudwatch/pricing/)
+- ApiGateway - 12 month free tier. [Click here for pricing](https://aws.amazon.com/api-gateway/pricing/)
+- IAM - Free
+- S3 - 12 month free tier. [Click here for pricing](https://aws.amazon.com/s3/pricing/)
+- DyanamoDB - Always Free tier. [Click here for pricing](https://aws.amazon.com/dynamodb/pricing/)
+
+But really, until you get users you will be paying basically nothing 🤷
+
+# Prerequisites
+
+Find the AWS Serverless prerequisites [here](https://serverless.com/framework/docs/providers/aws/guide/quick-start/)
+
+# Usage - deploy your own serverless websockets right now 🦄
 
 1) `git clone git@github.com:Ascendzor/aws-node-websockets.git`
 2) `cd aws-node-websockets`
 3) `npm i`
 4) `cp env.yml.example env.yml`
 5) `sls deploy`
-6) Wait 10 minutes... The first deploy takes a long time because it creates a new RDS instance. [Why do websockets need a database? Read 2. of serverless.yml section](https://github.com/Ascendzor/aws-node-websockets#serverlessyml)
-7) Deployment finishes, wss endpoint is printed in your terminal.
+7) Deployment finishes, wss endpoint is printed in your terminal. Then use a tool like [wscat](https://www.npmjs.com/package/wscat) to test your endpoint.
 
 Explanation of important files below.
 
-# serverless.yml
+# [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
 Contains the configuration for the serverless framework that this project is based on. Has 2 major parts:
 
-1) Three functions, [`connect`, `disconnect`, `default`] that all have the event type `websocket` trigger. Connect is triggered when someone first makes a connection, disconnect when someone disconnects, and default when a message is received from a client. Serverless websockets are slightly different. The websocket connections are maintained in ApiGateway, not Lambda, so that means that the `return` for these functions is a message to ApiGateway *not the user who triggered the lambda*. Returning satusCode 200 to ApiGateway lets ApiGateway know that everything is working as expected. But then how do we send messages to users? See the [communication.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#communicationjs) section.
+1) Three functions, [`connect`, `disconnect`, `default`] that all have the event type `websocket` trigger. Connect is triggered when someone first makes a connection, disconnect when someone disconnects, and default when a message is received from a client. Serverless websockets are slightly different. The websocket connections are maintained in ApiGateway, not Lambda, so that means that the `return` for these functions is a message to ApiGateway *not the user who triggered the lambda*. Returning satusCode 200 to ApiGateway lets ApiGateway know that everything is working as expected. But then how do we send messages to users? See the [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#sendmessagejs) section.
 
-2) A dynamodb database has been defined inside the resources section. On a traditional server model the server would store the current connections inside memory, we could do that in serverless but if two or more Lambdas were created we would have two or more sets of connections. Instead we write our connections to a database.
+2) A dynamodb database has been defined inside the resources section. On a traditional server model the server would store the current connections inside memory. Instead in Serverless we write our connections to a database, so that all Lambda instances are consistent.
 
-# handler.js
-Not much to see here, if you are familiar with serverless you will be familiar with the code here. The return of statusCodes here is to ApiGateway and not your users. See the [communication.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#communicationjs) for how to message users.
+# [handler.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/handler.js)
+Not much to see here, if you are familiar with serverless you will be familiar with the code here. The return of statusCodes here is to ApiGateway and not your users. See the [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#sendmessagejs) for how to message users.
 
-# data.js
-Data layer for managing connections. Uses the dynamodb instance defined inside the serverless.yml
+# (data.js)[https://github.com/Ascendzor/aws-node-websockets/blob/master/data.js]
+Data layer for managing connections. Uses the dynamodb instance defined inside the [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
 
-# sendMessage.js
+# [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/sendMessage.js)
 This is where we make messages back to the clients. The way AWS manages serverless websockets is the websocket connection is maintained in APIGateway, not in Lambda. To send a message to our users we need to send a message to APIGateway and we do that using aws-sdk `apigatewaymanagementapi.postToConnection`.
 
 # Gotchas!
