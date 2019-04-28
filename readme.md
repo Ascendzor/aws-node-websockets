@@ -1,7 +1,8 @@
 # aws-node-websockets usecase
 
-Bootstrap a serverless microservice that interfaces by websockets in 10 minutes.
-Reference for people setting things up themselves.
+To quickly bootstrap microservices with serverless architecture via websockets.
+
+To be referenced for people adding websockets to their current serverless microservices.
 
 # AWS Services & Pricing
 
