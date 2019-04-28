@@ -3,17 +3,17 @@
 Bootstrap a serverless microservice that interfaces by websockets in 10 minutes.
 Reference for people setting things up themselves.
 
-# AWS Services & Pricing - pretty much free until your service gets usage.
+# AWS Services & Pricing
 
-This service uses these AWS services and their pricing.
+It's pretty much free until your service gets usage.
+
+This service uses these AWS services and their pricing. 
 - Lambda - Always Free tier. [Click here for pricing](https://aws.amazon.com/lambda/pricing/)
 - CloudWatch - Always Free tier. [Click here for pricing](https://aws.amazon.com/cloudwatch/pricing/)
 - ApiGateway - 12 month free tier. [Click here for pricing](https://aws.amazon.com/api-gateway/pricing/)
 - IAM - Free
 - S3 - 12 month free tier. [Click here for pricing](https://aws.amazon.com/s3/pricing/)
 - DyanamoDB - Always Free tier. [Click here for pricing](https://aws.amazon.com/dynamodb/pricing/)
-
-But really, until you get users you will be paying basically nothing 🤷
 
 # Prerequisites
 
