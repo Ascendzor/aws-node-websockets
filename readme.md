@@ -5,7 +5,7 @@ Reference for people setting things up themselves.
 
 # AWS Services & Pricing
 
-It's pretty much free until your service gets usage.
+It's pretty much free until your service gets usage. You'll be paying <$1 per month for developing on.
 
 This service uses these AWS services and their pricing. 
 - Lambda - Always Free tier. [Click here for pricing](https://aws.amazon.com/lambda/pricing/)
