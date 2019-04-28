@@ -31,20 +31,20 @@ Find the AWS Serverless prerequisites [here](https://serverless.com/framework/do
 
 # Short explanation of the important files:
 
-# [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
+## [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
 Contains the configuration for the serverless framework that this project is based on. Has 2 major parts:
 
 1) Three functions, [`connect`, `disconnect`, `default`] that all have the event type `websocket` trigger. Connect is triggered when someone first makes a connection, disconnect when someone disconnects, and default when a message is received from a client. Serverless websockets are slightly different. The websocket connections are maintained in ApiGateway, not Lambda, so that means that the `return` for these functions is a message to ApiGateway *not the user who triggered the lambda*. Returning satusCode 200 to ApiGateway lets ApiGateway know that everything is working as expected. But then how do we send messages to users? See the [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#sendmessagejs) section.
 
 2) A dynamodb database has been defined inside the resources section. On a traditional server model the server would store the current connections inside memory. Instead in Serverless we write our connections to a database, so that all Lambda instances are consistent.
 
-# [handler.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/handler.js)
+## [handler.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/handler.js)
 Not much to see here, if you are familiar with serverless you will be familiar with the code here. The return of statusCodes here is to ApiGateway and not your users. See the [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#sendmessagejs) for how to message users.
 
-# (data.js)[https://github.com/Ascendzor/aws-node-websockets/blob/master/data.js]
+## (data.js)[https://github.com/Ascendzor/aws-node-websockets/blob/master/data.js]
 Data layer for managing connections. Uses the dynamodb instance defined inside the [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
 
-# [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/sendMessage.js)
+## [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/sendMessage.js)
 This is where we make messages back to the clients. The way AWS manages serverless websockets is the websocket connection is maintained in APIGateway, not in Lambda. To send a message to our users we need to send a message to APIGateway and we do that using aws-sdk `apigatewaymanagementapi.postToConnection`.
 
 # Gotchas!
