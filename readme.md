@@ -1,6 +1,6 @@
-# aws-node-websockets usecase
+# aws-node-websockets usecases
 
-To quickly bootstrap microservices with serverless architecture via websockets.
+To quickly bootstrap microservices with serverless websockets.
 
 To be referenced for people adding websockets to their current serverless microservices.
 
