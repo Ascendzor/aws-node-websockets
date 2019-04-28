@@ -41,7 +41,7 @@ Contains the configuration for the serverless framework that this project is bas
 ## [handler.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/handler.js)
 Not much to see here, if you are familiar with serverless you will be familiar with the code here. The return of statusCodes here is to ApiGateway and not your users. See the [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/readme.md#sendmessagejs) for how to message users.
 
-## (data.js)[https://github.com/Ascendzor/aws-node-websockets/blob/master/data.js]
+## [data.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/data.js)
 Data layer for managing connections. Uses the dynamodb instance defined inside the [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
 
 ## [sendMessage.js](https://github.com/Ascendzor/aws-node-websockets/blob/master/sendMessage.js)
