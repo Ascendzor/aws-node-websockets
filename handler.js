@@ -1,4 +1,4 @@
-const {reply} = require('./communication')
+const {toConnection} = require('./sendMessage')
 const {addConnection, listConnections, removeConnection} = require('./data')
 
 module.exports.connect = (event, context) => {
@@ -17,7 +17,7 @@ module.exports.default = (event, context) => {
   console.log({event, context})
   const connectionId = event.requestContext.connectionId
   return listConnections()
-    .then(res => reply({requestContext: event.requestContext, body: res}))
+    .then(res => toConnection({domainName: event.requestContext.domainName, body: res, connectionId}))
     .then(res => {
       return {
         statusCode: 200

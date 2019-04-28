@@ -3,18 +3,14 @@ provider:
   name: aws
   runtime: nodejs8.10
   memorySize: 128
+  stage: ${file(env.yml):stage}
+  region: ${file(env.yml):region}
   environment:
-    databaseEndpoint:
-      Fn::GetAtt: [connectionsdatabase, Endpoint.Address] # this is how the Lambda can get the dynamically generated endpoint for your rds instance
-    databaseUsername: ${file(env.yml):databaseUsername}
-    databasePassword: ${file(env.yml):databasePassword}
-    databaseName: ${file(env.yml):databaseName}
+    dynamodb: ${self:service}-${opt:stage, self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:rds:${self:provider.region}:*:db/${file(env.yml):databaseInstance}"
-stage: dev
-region: us-east-1
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb}"
 
 functions:
   connect:
@@ -35,13 +31,18 @@ functions:
 
 resources:
   Resources:
-    connectionsdatabase:
-      Type: AWS::RDS::DBInstance
+    connectionsDynamodb:
+      Type: 'AWS::DynamoDB::Table'
       Properties:
-        DBInstanceClass: db.t2.micro
-        DBInstanceIdentifier: ${file(env.yml):databaseInstance}
-        Engine: MySQL
-        AllocatedStorage: 5
-        DBName: ${file(env.yml):databaseName}
-        MasterUsername: ${file(env.yml):databaseUsername}
-        MasterUserPassword: ${file(env.yml):databasePassword}
+        AttributeDefinitions:
+          -
+            AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: connectionId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.dynamodb}
