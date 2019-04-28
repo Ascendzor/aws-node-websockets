@@ -1,7 +1,7 @@
 const util = require('util')
 const AWS = require('aws-sdk')
 AWS.config.update({region: process.env.region})
-const stage = 'dev'
+const stage = process.env.stage
 
 module.exports = {
   toConnection: ({domainName, connectionId, body}) => {
