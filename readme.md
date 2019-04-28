@@ -29,7 +29,7 @@ Find the AWS Serverless prerequisites [here](https://serverless.com/framework/do
 5) `sls deploy`
 7) Deployment finishes, wss endpoint is printed in your terminal. Then use a tool like [wscat](https://www.npmjs.com/package/wscat) to test your endpoint.
 
-Explanation of important files below.
+# Short explanation of the important files:
 
 # [serverless.yml](https://github.com/Ascendzor/aws-node-websockets/blob/master/serverless.yml)
 Contains the configuration for the serverless framework that this project is based on. Has 2 major parts:
