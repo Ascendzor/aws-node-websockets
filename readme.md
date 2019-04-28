@@ -4,18 +4,6 @@ To quickly bootstrap microservices with serverless websockets.
 
 To be referenced for people adding websockets to their current serverless microservices.
 
-# AWS Services & Pricing
-
-It's pretty much free until your service gets usage. You'll be paying <$1 per month for developing on.
-
-Here are the AWS services being used and their pricings.
-- Lambda - Always Free tier. [Click here for pricing](https://aws.amazon.com/lambda/pricing/)
-- CloudWatch - Always Free tier. [Click here for pricing](https://aws.amazon.com/cloudwatch/pricing/)
-- ApiGateway - 12 month free tier. [Click here for pricing](https://aws.amazon.com/api-gateway/pricing/)
-- IAM - Free
-- S3 - 12 month free tier. [Click here for pricing](https://aws.amazon.com/s3/pricing/)
-- DyanamoDB - Always Free tier. [Click here for pricing](https://aws.amazon.com/dynamodb/pricing/)
-
 # Prerequisites
 
 Find the AWS Serverless prerequisites [here](https://serverless.com/framework/docs/providers/aws/guide/quick-start/)
@@ -51,3 +39,15 @@ This is where we make messages back to the clients. The way AWS manages serverle
 1) Do not use the default aws-sdk that is provided in Lambda. You don't know what version it is, and I struggled many times not understanding why `apigatewaymanagementapi.postToConnection` would not work how I expected and it's because the aws-sdk library on Lambda is very old. You must have your own aws-sdk installed inside node_modules before you do a serverless deploy, and if you do have your own installed then Lambda will use yours and not the default.
 
 2) The websocket connection is created *after* the connect handler has returned statusCode 200. You cannot send a message inside the connect handler. Only use postToConnection inside the default handler.
+
+# AWS Services & Pricing
+
+It's pretty much free until your service gets usage. You'll be paying <$1 per month for developing on.
+
+Here are the AWS services being used and their pricings.
+- Lambda - Always Free tier. [Click here for pricing](https://aws.amazon.com/lambda/pricing/)
+- CloudWatch - Always Free tier. [Click here for pricing](https://aws.amazon.com/cloudwatch/pricing/)
+- ApiGateway - 12 month free tier. [Click here for pricing](https://aws.amazon.com/api-gateway/pricing/)
+- IAM - Free
+- S3 - 12 month free tier. [Click here for pricing](https://aws.amazon.com/s3/pricing/)
+- DyanamoDB - Always Free tier. [Click here for pricing](https://aws.amazon.com/dynamodb/pricing/)

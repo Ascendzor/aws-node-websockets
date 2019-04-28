@@ -7,10 +7,12 @@ provider:
   region: ${file(env.yml):region}
   environment:
     dynamodb: ${self:service}-${opt:stage, self:provider.stage}
+    stage: ${self:provider.stage}
+    region: ${self:provider.region}
   iamRoleStatements:
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.dynamodb}"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.dynamodb}"
 
 functions:
   connect:
@@ -42,7 +44,5 @@ resources:
           -
             AttributeName: connectionId
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.dynamodb}
