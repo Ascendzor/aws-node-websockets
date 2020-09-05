@@ -6,24 +6,31 @@ provider:
   stage: ${file(env.yml):stage}
   region: ${file(env.yml):region}
   environment:
-    dynamodb: ${self:service}-${opt:stage, self:provider.stage}
+    connectionsTable: maze-connections
     stage: ${self:provider.stage}
     region: ${self:provider.region}
-    gameStateTable: gamestate1
-    playersGameStates: playersgametates
+    gameStateTable: gamestate2
+    playersGameStatesTable: playersgamestates
+    domainName: 57wvdg47l5.execute-api.us-east-1.amazonaws.com
   iamRoleStatements:
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.dynamodb}"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.connectionsTable}"
     - Effect: Allow
       Action: "*"
       Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.gameStateTable}"
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.playersGameStates}"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.playersGameStatesTable}"
     - Effect: Allow
       Action: "*"
       Resource: arn:aws:sqs:us-east-1:702407458234:*
+
+package:
+  excludeDevDependencies: true
+  exclude:
+    - node_modules/aws-sdk
+
 
 functions:
   newGame:
@@ -41,6 +48,14 @@ functions:
           arn:
             Fn::GetAtt:
               - endOfBuildTime
+              - Arn
+  onEndOfShowcase:
+    handler: handler.onEndOfShowcase
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - endOfShowcase
               - Arn
   connect:
     handler: handler.connect
@@ -72,17 +87,17 @@ resources:
             AttributeName: connectionId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.dynamodb}
-    gamestateDynamodb:
+        TableName: ${self:provider.environment.connectionsTable}
+    gamestateDynamodb1:
       Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: seed
+            AttributeName: reference
             AttributeType: S
         KeySchema:
           -
-            AttributeName: seed
+            AttributeName: reference
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.gameStateTable}
@@ -98,7 +113,7 @@ resources:
             AttributeName: connectionId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.playersGameStates}
+        TableName: ${self:provider.environment.playersGameStatesTable}
     MyQueue:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -107,3 +122,7 @@ resources:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: "endOfBuildTime"
+    endOfShowcase:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "endOfShowcase"

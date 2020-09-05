@@ -1,16 +1,21 @@
 const AWS = require('aws-sdk')
 const { v4: uuidv4 } = require('uuid')
 const magic = require('./magic')
-AWS.config.update({region: process.env.region})
-const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
-const dynamoDb = new AWS.DynamoDB.DocumentClient()
+
 const {
   stage,
+  connectionsTable,
   gameStateTable,
-  playersGameStates
+  playersGameStatesTable,
+  domainName,
+  region
 } = process.env
 
-const sendMessage = async ({domainName, connectionId, body}) => {
+AWS.config.update({region: region})
+const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+const dynamoDb = new AWS.DynamoDB.DocumentClient()
+
+const sendMessage = async ({connectionId, body}) => {
   const url = `https://${domainName}/${stage}`
   const apigatewaymanagementapi = new AWS.ApiGatewayManagementApi({apiVersion: '2018-11-29', endpoint: url})
   return apigatewaymanagementapi.postToConnection({
@@ -22,98 +27,154 @@ const sendMessage = async ({domainName, connectionId, body}) => {
 module.exports.connect = async (event, context) => {
   console.log({event, context})
   return dynamoDb.put({
-    TableName: process.env.dynamodb,
+    TableName: connectionsTable,
     Item: {
-      connectionId: event.requestContext.connectionId,
-      domainName: event.requestContext.domainName
+      connectionId: event.requestContext.connectionId
     }
   }).promise()
 }
 
 module.exports.receivedMessage = async (event, context) => {
   console.log({event, context})
-  const something = await dynamoDb.scan({TableName: process.env.dynamodb}).promise()
-  await sendMessage({
-    domainName: event.requestContext.domainName,
-    body: something,
-    connectionId: event.requestContext.connectionId
-  })
+  const body = JSON.parse(event.body)
+  console.log({body})
+
+  if(body.action === 'joinMultiplayer') {
+    const thisUser = await dynamoDb.get({
+      TableName: playersGameStatesTable,
+      Key: {
+        connectionId: event.requestContext.connectionId
+      }
+    }).promise()
+    if(thisUser.connectionId !== undefined) {
+      console.log("something has wrong, a user has tried to join multiplayer while already in multiplayer.")
+      return {statusCode: 200}
+    }
+
+    //Add the player to multiplayer
+    await dynamoDb.put({
+      TableName: playersGameStatesTable,
+      Item: {
+        connectionId: event.requestContext.connectionId
+      }
+    }).promise()
+    
+    await sendMessage({
+      body: {
+        action: 'message',
+        payload: 'You have been added to multiplayer'
+      },
+      connectionId: event.requestContext.connectionId
+    })
+
+    const hostGameStateResponse = await dynamoDb.get({
+      TableName: playersGameStatesTable,
+      Key: {
+        connectionId: 'host'
+      }
+    }).promise()
+    console.log({hostGameStateResponse})
+
+    //If no game is currently playing, start a new one.
+    if(hostGameStateResponse.connectionId === undefined) {
+      await dynamoDb.put({
+        TableName: playersGameStatesTable,
+        Item: {
+          connectionId: 'host'
+        }
+      }).promise()
+      await sqs.sendMessage({
+        MessageBody: uuidv4(),
+        QueueUrl: "https://sqs.us-east-1.amazonaws.com/702407458234/MyQueue",
+        DelaySeconds: 2
+      }).promise()
+    }
+  }
   return {statusCode: 200}
 }
 
 module.exports.disconnect = async (event, context) => {
   console.log({event, context})
+
   await dynamoDb.delete({
-    TableName: process.env.dynamodb,
+    TableName: connectionsTable,
     Key: {
       connectionId: event.requestContext.connectionId
     }
   }).promise()
+
+  await dynamoDb.delete({
+    TableName: playersGameStatesTable,
+    Key: {
+      connectionId: event.requestContext.connectionId
+    }
+  }).promise()
+
   return {statusCode: 200}
 }
 
 module.exports.newGame = async (event) => {
   console.log(JSON.stringify(event))
-  const playerGameStatesScanResponse = await dynamoDb.scan({
-    TableName: playersGameStates
-  }).promise()
-  console.log(playerGameStatesScanResponse)
-  console.log('deleting all playergamestates')
-  await Promise.all(playerGameStatesScanResponse.Items.map(item => {
-    return dynamoDb.delete({
-      TableName: playersGameStates,
-      Key: {
-        connectionId: item.connectionId
-      }
-    }).promise()
-  }))
-  console.log('all playergamestates deleted')
-  const buildTime = 120
 
-  const seed = uuidv4()
+  const seed = event.Records[0].body
+  const currentGame = dynamoDb.get({
+    TableName: gameStateTable,
+    Key: "theGame"
+  })
+  if(currentGame.seed && currentGame.seed !== seed) {
+    console.log('tried to start a game when a game was already going')
+    return {statusCode: 200}
+  }
   const newGame = {
     seed,
     gameState: magic.generateGameState(seed)
   }
 
-  await dynamoDb.put({
-    TableName: gameStateTable,
-    Item: newGame
+  const playerGameStatesScanResponse = await dynamoDb.scan({
+    TableName: playersGameStatesTable
   }).promise()
 
-  const connectionResponse = await dynamoDb.scan({TableName: process.env.dynamodb}).promise()
-  console.log(connectionResponse )
-
-  // Add all of the players
-  await Promise.all(connectionResponse.Items.map(async item => {
-    await dynamoDb.put({
-      TableName: playersGameStates,
+  if(playerGameStatesScanResponse.Items.length <= 1) {
+    console.log('no one is playing anymore, very sad :(')
+    return {statusCode: 200}
+  }
+  console.log({playerGameStatesScanResponse})
+  await Promise.all(playerGameStatesScanResponse.Items.map(player => {
+    return dynamoDb.put({
+      TableName: playersGameStatesTable,
       Item: {
-        gameState: newGame.gameState,
-        connectionId: item.connectionId
+        connectionId: player.connectionId,
+        ...newGame
       }
     }).promise()
-    await sendMessage({
-      domainName: item.domainName,
-      body: {...newGame,
-        connectionId: item.connectionId,
-        buildTime
+  }))
+
+  const buildTime = 120
+
+  await Promise.all(playerGameStatesScanResponse.Items.map(player => {
+    console.log(player)
+    if(player.connectionId === 'host') return Promise.resolve()
+    return sendMessage({
+      body: {
+        action: 'newGame',
+        payload: {
+          ...newGame,
+          buildTime
+        }
       },
-      connectionId: item.connectionId
+      connectionId: player.connectionId
     })
   }))
 
-  //Add the host, for a baseline time
   await dynamoDb.put({
-    TableName: playersGameStates,
-    Item: {
-      gameState: newGame.gameState,
-      connectionId: 'host'
+    TableName: gameStateTable,
+    Item: {...newGame,
+      reference: 'theGame'
     }
   }).promise()
 
   await sqs.sendMessage({
-    MessageBody: '_',
+    MessageBody: seed,
     QueueUrl: "https://sqs.us-east-1.amazonaws.com/702407458234/endOfBuildTime",
     DelaySeconds: buildTime
   }).promise()
@@ -123,26 +184,72 @@ module.exports.newGame = async (event) => {
 
 module.exports.onEndOfBuildTime = async (event) => {
   console.log(JSON.stringify(event))
-  const connectionResponse = await dynamoDb.scan({TableName: process.env.dynamodb}).promise()
-  console.log({connectionResponse})
-  await Promise.all(connectionResponse.Items.map(async item => {
-    return await sendMessage({...item,
-      body: 'end of build time'
+  const seed = event.Records[0].body
+  
+  const playerGameStatesScanResponse = await dynamoDb.scan({
+    TableName: playersGameStatesTable
+  }).promise()
+  
+  const players = playerGameStatesScanResponse.Items.map(player => {
+    // const grid = magic.decodeGrid(player.gameState.grid)
+    return {
+      // connectionId: player.connectionId,
+      // score: magic.getPlayerPositions(grid).length
+      name: 'player name goes here',
+      gameState: player.gameState
+    }
+  })
+  console.log({players})
+
+  await Promise.all(playerGameStatesScanResponse.Items.map(player => {
+    if(player.connectionId === 'host') return Promise.resolve()
+    return sendMessage({
+      connectionId: player.connectionId,
+      body: {
+        action: 'endOfBuildTime',
+        payload: players
+      }
     })
   }))
 
-  const playersGamesStatesScan = await dynamoDb.scan({TableName: playersGameStates}).promise()
-  console.log({playersGamesStatesScan})
-  
-  const something = playersGamesStatesScan.Items.map(item => {
-    const grid = magic.decodeGrid(item.gameState.grid)
-    return {
-      connectionId: item.connectionId,
-      score: magic.getPlayerPositions(grid).length
-    }
-  }).sort((a, b) => a.score > b.score ? 1 : -1)
+  const highestScore = players.map(p => magic.getPlayerPositions(magic.decodeGrid(p.gameState.grid)).length).sort((a, b) => a < b ? 1 : -1)[0]
+  console.log({highestScore})
 
-  console.log(something)
+  const secondsForShowcase = Math.floor((highestScore/60) + 10)
+  console.log('show case would take ' + secondsForShowcase + ' many seconds')
+  await sqs.sendMessage({
+    MessageBody: seed,
+    QueueUrl: "https://sqs.us-east-1.amazonaws.com/702407458234/endOfShowcase",
+    DelaySeconds: secondsForShowcase
+  }).promise()
+
+  return {statusCode: 200}
+}
+
+module.exports.onEndOfShowcase = async (event) => {
+  console.log(JSON.stringify(event))
+
+  await dynamoDb.delete({
+    TableName: gameStateTable,
+    Key: {
+      reference: "theGame"
+    }
+  }).promise()
+
+  const playersResponse = await dynamoDb.scan({
+    TableName: playersGameStatesTable
+  }).promise()
+
+  if(playersResponse.Items.length <= 1) {
+    console.log('nobody is playing :( we do nothing')
+    return {statusCode: 200}
+  }
+
+  await sqs.sendMessage({
+    MessageBody: uuidv4(),
+    QueueUrl: "https://sqs.us-east-1.amazonaws.com/702407458234/MyQueue",
+    DelaySeconds: 5
+  }).promise()
 
   return {statusCode: 200}
 }

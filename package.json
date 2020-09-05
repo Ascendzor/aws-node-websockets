@@ -13,12 +13,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.427.0",
     "pathfinding": "https://github.com/mm304321141/PathFinding.js.git",
     "random-seed": "^0.3.0",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
-    "jest": "^26.4.2"
+    "jest": "^26.4.2",
+    "aws-sdk": "^2.427.0"
   }
 }
