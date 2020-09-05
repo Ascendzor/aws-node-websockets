@@ -1,0 +1,1 @@
+{"errorType":"TypeError","errorMessage":"Cannot read property 'connectionId' of undefined","trace":["TypeError: Cannot read property 'connectionId' of undefined","    at Runtime.module.exports.default [as handler] (/var/task/handler.js:18:45)","    at Runtime.handleOnce (/var/runtime/Runtime.js:66:25)"]}

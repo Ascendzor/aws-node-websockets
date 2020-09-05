@@ -1,7 +1,7 @@
-service: aws-node-websockets
+service: maze-game
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
   memorySize: 128
   stage: ${file(env.yml):stage}
   region: ${file(env.yml):region}
@@ -9,12 +9,39 @@ provider:
     dynamodb: ${self:service}-${opt:stage, self:provider.stage}
     stage: ${self:provider.stage}
     region: ${self:provider.region}
+    gameStateTable: gamestate1
+    playersGameStates: playersgametates
   iamRoleStatements:
     - Effect: Allow
       Action: "*"
       Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.dynamodb}"
+    - Effect: Allow
+      Action: "*"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.gameStateTable}"
+    - Effect: Allow
+      Action: "*"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.playersGameStates}"
+    - Effect: Allow
+      Action: "*"
+      Resource: arn:aws:sqs:us-east-1:702407458234:*
 
 functions:
+  newGame:
+    handler: handler.newGame
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+  onEndOfBuildTime:
+    handler: handler.onEndOfBuildTime
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - endOfBuildTime
+              - Arn
   connect:
     handler: handler.connect
     events:
@@ -25,8 +52,8 @@ functions:
     events:
       - websocket:
           route: $disconnect
-  default:
-    handler: handler.default
+  receivedMessage:
+    handler: handler.receivedMessage
     events:
       - websocket:
           route: $default
@@ -46,3 +73,37 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.dynamodb}
+    gamestateDynamodb:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: seed
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: seed
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.gameStateTable}
+    playersGameStates:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.playersGameStates}
+    MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "MyQueue"
+    endOfBuildTime:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "endOfBuildTime"
