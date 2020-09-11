@@ -15,17 +15,11 @@ test('generateStartingGrid looks good', () => {
     expect(grid).toMatchSnapshot()
 })
 
-test('encode grid looks good', () => {
-    const grid = generateStartingGrid('1.4142')
-    const encodedGrid = encodeGrid(grid)
-    expect(encodedGrid).toMatchSnapshot()
-});
-
-test('decode grid looks good', () => {
+test('encode and decode works', () => {
     const grid = generateStartingGrid('1.4142')
     const encodedGrid = encodeGrid(grid)
     const decodedGrid = decodeGrid(encodedGrid)
-    expect(decodedGrid).toMatchSnapshot()
+    expect(decodedGrid).toEqual(grid)
 })
 
 test('getPath looks good', () => {

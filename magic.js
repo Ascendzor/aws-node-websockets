@@ -10,6 +10,8 @@ const gridLength = Math.round(gridHeight * (233/144)) //the golden ratio
 const startingPlace = {x: 0, y: Math.floor(gridHeight/2)}
 const endingPlace = {x: gridLength-1, y: Math.floor(gridHeight/2)}
 const chanceOfStaticWall = 15
+const slowReach = 2.1
+const slowRate = 2
 
 const decodedToEncoded = {
     wall: 'w',
@@ -25,11 +27,13 @@ const encodedToDecoded = {
 }
 
 const encodeGrid = grid => {
-    return grid.reduce((encoded, row, x) => {
-        return encoded + grid[x].reduce((colReduction, block, y) => {
-            return colReduction + decodedToEncoded[block.contains]
-        }, '')
-    }, '')
+    let encodedGrid = ''
+    Array.from({length: gridLength}).forEach((_, x) => {
+        Array.from({length: gridHeight}).forEach((_, y) => {
+            encodedGrid += decodedToEncoded[grid[x][y].contains]
+        })
+    })
+    return encodedGrid
 }
 
 module.exports.generateGameState = (seed) => {
@@ -48,7 +52,7 @@ module.exports.decodeGrid = encodedGrid => {
     const grid = Array.from({length: gridLength}).map((_, x) => {
         return Array.from({length: gridHeight}).map((_, y) => {
             return {
-                x, y, contains: encodedToDecoded[encodedGrid[y * gridHeight + x]]
+                x, y, contains: encodedToDecoded[encodedGrid[x * gridHeight + y]]
             }
         })
     })
