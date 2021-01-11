@@ -1,3 +1,4 @@
+import { IGridItem, IPlay, IPath} from './types';
 const randomSeed = require('random-seed')
 const ThetaStarFinder = require('pathfinding/src/finders/ThetaStarFinder')
 const PathFinder = require('pathfinding')
@@ -26,7 +27,7 @@ const encodedToDecoded = {
     x: 'space'
 }
 
-const encodeGrid = grid => {
+export const encodeGrid = (grid: IGridItem[][]): string => {
     let encodedGrid = ''
     Array.from({length: gridLength}).forEach((_, x) => {
         Array.from({length: gridHeight}).forEach((_, y) => {
@@ -36,7 +37,7 @@ const encodeGrid = grid => {
     return encodedGrid
 }
 
-module.exports.generateGameState = (seed) => {
+export const generateGame = (seed: string): IPlay => {
     return {
         toolbox: {
             wall: minimumWalls + randomSeed.create(seed).range(maximumWalls - minimumWalls),
@@ -46,9 +47,7 @@ module.exports.generateGameState = (seed) => {
     }
 }
 
-module.exports.encodeGrid = encodeGrid
-
-module.exports.decodeGrid = encodedGrid => {
+export const decodeGrid = encodedGrid => {
     const grid = Array.from({length: gridLength}).map((_, x) => {
         return Array.from({length: gridHeight}).map((_, y) => {
             return {
@@ -59,9 +58,9 @@ module.exports.decodeGrid = encodedGrid => {
     return grid
 }
 
-const generateStartingGrid = (seed) => {
+const generateStartingGrid = (seed: string): IGridItem[][] => {
     let path = []
-    let grid = []
+    let grid = [] as IGridItem[][]
     while(path.length === 0) {
         grid = Array.from({length: gridLength}).map((_, x) => {
             return Array.from({length: gridHeight}).map((_, y) => {
@@ -81,7 +80,7 @@ const generateStartingGrid = (seed) => {
 }
 module.exports.generateStartingGrid = generateStartingGrid
 
-const getPath = (grid) => {
+const getPath = (grid: IGridItem[][]): IPath => {
     return (new ThetaStarFinder()).findPath(startingPlace.x, startingPlace.y, endingPlace.x, endingPlace.y, gridToPathfinderGrid(grid)).map(pathFinderPath => {
         return {
             x: pathFinderPath[0],
@@ -103,7 +102,7 @@ const distanceBetweenPoints = (pointA, pointB) => {
     return Math.hypot(pointB.x-pointA.x, pointB.y-pointA.y)
 }
 
-const getPlayerPositions = (grid) => {
+export const getPlayerPositions = (grid) => {
     const path = getPath(grid)
     const distances = path.map((point, i) => {
         if(i === path.length-1) return 0
@@ -146,4 +145,3 @@ const getPlayerPositions = (grid) => {
         return position
     }).flat()
 }
-module.exports.getPlayerPositions = getPlayerPositions

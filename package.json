@@ -15,10 +15,13 @@
   "dependencies": {
     "pathfinding": "https://github.com/mm304321141/PathFinding.js.git",
     "random-seed": "^0.3.0",
+    "source-map-support": "^0.5.19",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
+    "aws-sdk": "^2.427.0",
     "jest": "^26.4.2",
-    "aws-sdk": "^2.427.0"
+    "serverless-plugin-typescript": "^1.1.9",
+    "typescript": "^4.0.3"
   }
 }

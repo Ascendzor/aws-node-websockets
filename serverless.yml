@@ -6,11 +6,11 @@ provider:
   stage: ${file(env.yml):stage}
   region: ${file(env.yml):region}
   environment:
-    connectionsTable: maze-connections
+    connectionsTable: connections
     stage: ${self:provider.stage}
     region: ${self:provider.region}
-    gameStateTable: gamestate2
-    playersGameStatesTable: playersgamestates
+    gamesTable: games
+    playersTable: players
     domainName: 57wvdg47l5.execute-api.us-east-1.amazonaws.com
   iamRoleStatements:
     - Effect: Allow
@@ -18,10 +18,10 @@ provider:
       Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.connectionsTable}"
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.gameStateTable}"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.gamesTable}"
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.playersGameStatesTable}"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.playersTable}"
     - Effect: Allow
       Action: "*"
       Resource: arn:aws:sqs:us-east-1:702407458234:*
@@ -41,6 +41,14 @@ functions:
             Fn::GetAtt:
               - MyQueue
               - Arn
+  endOfRunTime:
+    handler: handler.endOfRunTime
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - endOfRunTime
+              - Arn
   onEndOfBuildTime:
     handler: handler.onEndOfBuildTime
     events:
@@ -48,14 +56,6 @@ functions:
           arn:
             Fn::GetAtt:
               - endOfBuildTime
-              - Arn
-  onEndOfShowcase:
-    handler: handler.onEndOfShowcase
-    events:
-      - sqs:
-          arn:
-            Fn::GetAtt:
-              - endOfShowcase
               - Arn
   connect:
     handler: handler.connect
@@ -75,7 +75,7 @@ functions:
 
 resources:
   Resources:
-    connectionsDynamodb:
+    connections:
       Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
@@ -88,7 +88,7 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.connectionsTable}
-    gamestateDynamodb1:
+    games:
       Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
@@ -100,8 +100,8 @@ resources:
             AttributeName: reference
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.gameStateTable}
-    playersGameStates:
+        TableName: ${self:provider.environment.gamesTable}
+    players:
       Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
@@ -113,16 +113,19 @@ resources:
             AttributeName: connectionId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.playersGameStatesTable}
+        TableName: ${self:provider.environment.playersTable}
     MyQueue:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: "MyQueue"
+    endOfRunTime:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "endOfRunTime"
     endOfBuildTime:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: "endOfBuildTime"
-    endOfShowcase:
-      Type: "AWS::SQS::Queue"
-      Properties:
-        QueueName: "endOfShowcase"
+
+plugins:
+  - serverless-plugin-typescript
