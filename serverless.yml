@@ -1,20 +1,62 @@
-service: aws-node-websockets
+service: maze-game
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
   memorySize: 128
   stage: ${file(env.yml):stage}
   region: ${file(env.yml):region}
   environment:
-    dynamodb: ${self:service}-${opt:stage, self:provider.stage}
+    connectionsTable: connections
     stage: ${self:provider.stage}
     region: ${self:provider.region}
+    gamesTable: games
+    playersTable: players
+    domainName: 57wvdg47l5.execute-api.us-east-1.amazonaws.com
   iamRoleStatements:
     - Effect: Allow
       Action: "*"
-      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.dynamodb}"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.connectionsTable}"
+    - Effect: Allow
+      Action: "*"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.gamesTable}"
+    - Effect: Allow
+      Action: "*"
+      Resource: "arn:aws:dynamodb:${self:provider.environment.region}:*:table/${self:provider.environment.playersTable}"
+    - Effect: Allow
+      Action: "*"
+      Resource: arn:aws:sqs:us-east-1:702407458234:*
+
+package:
+  excludeDevDependencies: true
+  exclude:
+    - node_modules/aws-sdk
+
 
 functions:
+  newGame:
+    handler: handler.newGame
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+  endOfRunTime:
+    handler: handler.endOfRunTime
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - endOfRunTime
+              - Arn
+  onEndOfBuildTime:
+    handler: handler.onEndOfBuildTime
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - endOfBuildTime
+              - Arn
   connect:
     handler: handler.connect
     events:
@@ -25,15 +67,15 @@ functions:
     events:
       - websocket:
           route: $disconnect
-  default:
-    handler: handler.default
+  receivedMessage:
+    handler: handler.receivedMessage
     events:
       - websocket:
           route: $default
 
 resources:
   Resources:
-    connectionsDynamodb:
+    connections:
       Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
@@ -45,4 +87,45 @@ resources:
             AttributeName: connectionId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.dynamodb}
+        TableName: ${self:provider.environment.connectionsTable}
+    games:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: reference
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: reference
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.gamesTable}
+    players:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.playersTable}
+    MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "MyQueue"
+    endOfRunTime:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "endOfRunTime"
+    endOfBuildTime:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "endOfBuildTime"
+
+plugins:
+  - serverless-plugin-typescript

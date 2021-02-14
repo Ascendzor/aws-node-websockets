@@ -5,13 +5,23 @@
   "main": "handler.js",
   "scripts": {
     "dev": "mocha --watch test",
-    "test": "echo put your tests here",
+    "test": "jest --watch",
+    "test-update": "jest --updateSnapshot",
     "event": "node emulate",
     "deploy": "sls deploy"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.427.0"
+    "pathfinding": "https://github.com/mm304321141/PathFinding.js.git",
+    "random-seed": "^0.3.0",
+    "source-map-support": "^0.5.19",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.427.0",
+    "jest": "^26.4.2",
+    "serverless-plugin-typescript": "^1.1.9",
+    "typescript": "^4.0.3"
   }
 }
