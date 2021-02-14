@@ -48,7 +48,12 @@ module.exports.receivedMessage = async (event, context) => {
     if(new Date().getTime() - new Date(mmoGame.startedBuildingAt).getTime() > 1000 * 60 * 5) {
       console.log('The startedBuildingAt is too old. Printing mmogame, before starting a new game')
       console.log(mmoGame)
-      mmoGame.phase = 'readyForNewGame'
+      await setMmoGame({...mmoGame, phase: 'readyForNewGame'})
+      await sqs.sendMessage({
+        MessageBody: uuidv4(),
+        QueueUrl: "https://sqs.us-east-1.amazonaws.com/702407458234/MyQueue",
+        DelaySeconds: 2
+      }).promise()
     }
 
     //If no game is currently playing, start a new one.
